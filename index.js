@@ -8,10 +8,8 @@
 
         this.onChangeQuestionNumber = null;
         this.onAnswerSubmit = null;
-
     };
 
-    var model = new Model();
 
     Model.prototype.questionNumber = function(questionIndex) {
         this.questionCurrent = questionIndex;
@@ -22,29 +20,34 @@
             this.onChangeQuestionNumber(this);
         }
 
-    };
-
-    // change myModel to model instance
-    myModel.onChangeQuestionNumber = (function(myModel.questionCurrent) {
-        console.log("Question" + (myModel.questionCurrent + 1) + ": " + myModel.questionText);
-        console.log(myModel.answers);
-    });
+    }
 
     Model.prototype.checkAnswer = function(choice) {
         var question = QUESTIONS[this.questionCurrent];
         if (question.answers[question.correct] === choice) {
             this.score +=1;
+            
         }
 
         if (this.onAnswerSubmit) {
             this.onAnswerSubmit(this);
         }
-
     }
 
-    myModel.onAnswerSubmit = (function(myModel.score) {
+     var myModel = new Model();
+
+
+    // change myModel to model instance
+    myModel.onChangeQuestionNumber = function(model) {
+        console.log("Question" + (myModel.questionCurrent + 1) + ": " + myModel.questionText);
+        console.log(myModel.answers);
+    };
+
+    myModel.onAnswerSubmit = function(model) {
         console.log("You've gotten" + myModel.score + "out of 4 correct");
-    });
+    };
+
+   
 
     var QUESTIONS = [{
             text: '<:48:x<:65:=<:6C:$=$=$$~<:03:+$~<:ffffffffffffffbd:+$<:ffffffffffffffb1:+$<:57:~$~<:18:x+$~<:03:+$~<:06:x-$x<:0e:x-$=x<:43:x-$',
@@ -92,46 +95,62 @@
 
     /*============= VIEW =============*/
 
-    // Linked variables
-    var questionElement = $('.question');
-    var answersElement = $('.answers');
-    var questionCurrentElement = $('.question-current');
-    var questionsTotalElement = $('.questions-total');
-    var scoreElement = $('.score');
-    var restartButtonElement = $('.restart-button');
+    var View = function(model) {
+        this.model = model;
+        // Linked variables
+        this.questionElement = $('.question');
+        this.answersElement = $('.answers');
+        this.questionCurrentElement = $('.question-current');
+        this.questionsTotalElement = $('.questions-total');
+        this.scoreElement = $('.score');
+        this.restartButtonElement = $('.restart-button');
+        
+        this.onChangeQuestionNumber = null;
+        this.onAnswerSubmit = null;
+        // Display only variables
+        this.questionsPageElement = $('.questions-page');
+        this.resultsPageElement = $('.results-page');
+        this.answersElement.on('click', 'button', function() {
+        onAnswerClick();
+         
+        });
+    };
 
-    // Display only variables
-    var questionsPageElement = $('.questions-page');
-    var resultsPageElement = $('.results-page');
 
     // Linked Functions
-    View.prototype.setQuestion = function(questionIndex) {
-        // Keeps track of current question
-        var question = QUESTIONS[questionIndex];
+    View.prototype.setQuestion = function(model) {
         // Displays current question number
-        questionCurrentElement.text(questionIndex);
+        this.questionCurrentElement.text(model.questionCurrent);
         // Displays current question text
-        questionElement.text(question.text);
+        this.questionElement.text(model.questionText);
         // Empties answersElement
-        answersElement.empty();
+        this.answersElement.empty();
+        // click function
+
         // Iterates through answers for current question
-        for (var i = 0; i < question.answers.length; i++) {
+        for (var i = 0; i < model.answers.length; i++) {
             // sets answers to variable
-            var answer = question.answers[i];
+            var answer = model.answers[i];
             // prints to answers element
-            answersElement.append('<li><button type="button">' + answer + '</button></li>');
+            this.answersElement.append('<li><button type="button">' + answer + '</button></li>');
         }
     };
 
     // click function
-    answersElement.on('click', 'button', function() {
+    View.prototype.onAnswerClick = function() {
         // takes the index from the answer the user clicked
         var choice = $(this).parent().index();
-        // keeps track of the question index
-        var questionIndex = parseInt(questionCurrentElement.text(), 10);
-        // calls checkAnswers function
-        checkAnswers(choice, questionIndex);
-    });
+        if (this.onAnswerSubmit) {
+            this.onAnswerSubmit(choice);
+        }
+        if (questionIndex + 1 < QUESTIONS.length) {
+           setQuestion(questionIndex + 1);
+        }
+        else {
+        showResults();
+        }
+    };
+    
     // increases score for each correct answer
     var increaseScore = function() {
         var score = parseInt(scoreElement.text(), 10);
@@ -158,13 +177,21 @@
         resultsPageElement.hide();
         questionsPageElement.show();
     };
+
+
+
     /*============ CONTROLLER ============*/
 
-    model.onChangeQuestionNumber = view.
+    var Controller = function(model, view) {
+        view.onChangeQuestionNumber = model.questionNumber.bind(model);
+        model.onChangeQuestionNumber = view.setQuestion.bind(view);
+        view.onAnswerSubmit = model.checkAnswer.bind(model);
+        model.onScoreChange = view.updateScore.bind(view);
+    };
 
 document.addEventListener('DOMContentLoaded', function() {
     var model = new Model();
-    var view = new View();
+    var view = new View(model);
     var controller = new Controller(model, view);
 });
 
