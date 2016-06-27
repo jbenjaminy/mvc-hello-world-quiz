@@ -25,27 +25,30 @@
     Model.prototype.checkAnswer = function(choice) {
         var question = QUESTIONS[this.questionCurrent];
         if (question.answers[question.correct] === choice) {
-            this.score +=1;
-            
+            this.score +=1; 
+        }
+        if (this.questionCurrent + 1 < QUESTIONS.length) {
+            this.questionCurrent +=1;
+        }
+        if (this.onScoreChange) {
+            this.onScoreChange(score);
         }
 
-        if (this.onAnswerSubmit) {
-            this.onAnswerSubmit(this);
-        }
+
     }
 
-     var myModel = new Model();
+    //  var myModel = new Model();
 
 
-    // change myModel to model instance
-    myModel.onChangeQuestionNumber = function(model) {
-        console.log("Question" + (myModel.questionCurrent + 1) + ": " + myModel.questionText);
-        console.log(myModel.answers);
-    };
+    // // change myModel to model instance
+    // myModel.onChangeQuestionNumber = function(model) {
+    //     console.log("Question" + (myModel.questionCurrent + 1) + ": " + myModel.questionText);
+    //     console.log(myModel.answers);
+    // };
 
-    myModel.onAnswerSubmit = function(model) {
-        console.log("You've gotten" + myModel.score + "out of 4 correct");
-    };
+    // myModel.onAnswerSubmit = function(model) {
+    //     console.log("You've gotten" + myModel.score + "out of 4 correct");
+    // };
 
    
 
@@ -107,13 +110,16 @@
         
         this.onChangeQuestionNumber = null;
         this.onAnswerSubmit = null;
-        // Display only variables
-        this.questionsPageElement = $('.questions-page');
-        this.resultsPageElement = $('.results-page');
+
         this.answersElement.on('click', 'button', function() {
         onAnswerClick();
          
         });
+
+        // Display only variables
+        this.questionsPageElement = $('.questions-page');
+        this.resultsPageElement = $('.results-page');
+       
     };
 
 
@@ -143,40 +149,45 @@
         if (this.onAnswerSubmit) {
             this.onAnswerSubmit(choice);
         }
-        if (questionIndex + 1 < QUESTIONS.length) {
-           setQuestion(questionIndex + 1);
-        }
-        else {
-        showResults();
-        }
+
+
+        // showResults();
+        
+    };
+
+    View.prototype.updateScore = function(score) {
+        this.scoreElement.text(score);
+
+        View.setQuestion(model);
+
     };
     
-    // increases score for each correct answer
-    var increaseScore = function() {
-        var score = parseInt(scoreElement.text(), 10);
-        scoreElement.text(score + 1);
-    };
-    // restarts game and zeros variables
-    restartButtonElement.click(function() {
-        setQuestion(0);
-        resetScore();
-        showQuestions();
-    });
+    // // increases score for each correct answer
+    // var increaseScore = function() {
+    //     var score = parseInt(scoreElement.text(), 10);
+    //     scoreElement.text(score + 1);
+    // };
+    // // restarts game and zeros variables
+    // restartButtonElement.click(function() {
+    //     setQuestion(0);
+    //     resetScore();
+    //     showQuestions();
+    // });
 
-    var resetScore = function() {
-        scoreElement.text(0);
-    };
+    // var resetScore = function() {
+    //     scoreElement.text(0);
+    // };
 
-    // Display Only Functions
-    var showResults = function() {
-        questionsPageElement.hide();
-        resultsPageElement.show();
-    };
+    // // Display Only Functions
+    // var showResults = function() {
+    //     questionsPageElement.hide();
+    //     resultsPageElement.show();
+    // };
 
-    var showQuestions = function() {
-        resultsPageElement.hide();
-        questionsPageElement.show();
-    };
+    // var showQuestions = function() {
+    //     resultsPageElement.hide();
+    //     questionsPageElement.show();
+    // };
 
 
 
@@ -185,7 +196,9 @@
     var Controller = function(model, view) {
         view.onChangeQuestionNumber = model.questionNumber.bind(model);
         model.onChangeQuestionNumber = view.setQuestion.bind(view);
+
         view.onAnswerSubmit = model.checkAnswer.bind(model);
+
         model.onScoreChange = view.updateScore.bind(view);
     };
 
@@ -193,9 +206,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var model = new Model();
     var view = new View(model);
     var controller = new Controller(model, view);
+
+    view.setQuestion(0);
 });
 
-    $(document).ready(function() {
-        questionsTotalElement.text(QUESTIONS.length);
-        setQuestion(0);
-    });
