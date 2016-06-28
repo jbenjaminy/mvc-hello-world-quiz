@@ -126,7 +126,13 @@
 
         // Click event for submitting answers, calls onAnswerClick function
         this.answersElement.on('click', 'button', function() {
-        onAnswerClick();
+            onAnswerClick();
+        });
+
+
+        // Click function that creates new game 
+        this.restartButtonElement.click(function() {
+            restartGame();
         });
 
         // Display only variables
@@ -135,6 +141,7 @@
        
     };
 
+      
 
     // Prototype function that displays stored values for current question 
     View.prototype.setQuestion = function(model) {
@@ -176,9 +183,10 @@
         }
 
     };
+
     
-    // Click function that creates new game 
-    restartButtonElement.click(function() {
+    // Function that creates a new game
+    function restartGame() {
         // Initializes a new instance of the model, view, and controller
         var model = new Model();
         var view = new View(model);
@@ -188,9 +196,8 @@
         model.questionNumber(0);
         // Displays the questions/answers section in the VIEW
         showQuestions();
-    });
+    };
 
-  
 
     // Display Only Functions
     function showResults() {
