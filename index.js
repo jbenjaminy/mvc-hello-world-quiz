@@ -37,18 +37,16 @@
 
     }
 
-    //  var myModel = new Model();
+    var myModel = new Model();
 
+    myModel.onChangeQuestionNumber = function(model) {
+        console.log("Question" + (myModel.questionCurrent + 1) + ": " + myModel.questionText);
+        console.log(myModel.answers);
+    };
 
-    // // change myModel to model instance
-    // myModel.onChangeQuestionNumber = function(model) {
-    //     console.log("Question" + (myModel.questionCurrent + 1) + ": " + myModel.questionText);
-    //     console.log(myModel.answers);
-    // };
-
-    // myModel.onAnswerSubmit = function(model) {
-    //     console.log("You've gotten" + myModel.score + "out of 4 correct");
-    // };
+    myModel.onAnswerSubmit = function(model) {
+        console.log("You've gotten" + myModel.score + "out of 4 correct");
+    };
 
    
 
@@ -91,15 +89,12 @@
             correct: 3
         }];
 
-       
-
-
-
-
     /*============= VIEW =============*/
 
     var View = function(model) {
+
         this.model = model;
+
         // Linked variables
         this.questionElement = $('.question');
         this.answersElement = $('.answers');
@@ -146,6 +141,7 @@
     View.prototype.onAnswerClick = function() {
         // takes the index from the answer the user clicked
         var choice = $(this).parent().index();
+
         if (this.onAnswerSubmit) {
             this.onAnswerSubmit(choice);
         }
@@ -158,15 +154,12 @@
     View.prototype.updateScore = function(score) {
         this.scoreElement.text(score);
 
-        View.setQuestion(model);
+        if (this.onChangeQuestionNumber) {
+            this.onChangeQuestionNumber();
+        }
 
     };
     
-    // // increases score for each correct answer
-    // var increaseScore = function() {
-    //     var score = parseInt(scoreElement.text(), 10);
-    //     scoreElement.text(score + 1);
-    // };
     // // restarts game and zeros variables
     // restartButtonElement.click(function() {
     //     setQuestion(0);
@@ -178,28 +171,29 @@
     //     scoreElement.text(0);
     // };
 
-    // // Display Only Functions
-    // var showResults = function() {
-    //     questionsPageElement.hide();
-    //     resultsPageElement.show();
-    // };
+    // Display Only Functions
+    var showResults = function() {
+        questionsPageElement.hide();
+        resultsPageElement.show();
+    };
 
-    // var showQuestions = function() {
-    //     resultsPageElement.hide();
-    //     questionsPageElement.show();
-    // };
+    var showQuestions = function() {
+        resultsPageElement.hide();
+        questionsPageElement.show();
+    };
 
 
 
     /*============ CONTROLLER ============*/
 
     var Controller = function(model, view) {
-        view.onChangeQuestionNumber = model.questionNumber.bind(model);
         model.onChangeQuestionNumber = view.setQuestion.bind(view);
 
         view.onAnswerSubmit = model.checkAnswer.bind(model);
 
         model.onScoreChange = view.updateScore.bind(view);
+
+        view.onChangeQuestionNumber = model.questionNumber.bind(model);
     };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -207,6 +201,6 @@ document.addEventListener('DOMContentLoaded', function() {
     var view = new View(model);
     var controller = new Controller(model, view);
 
-    view.setQuestion(0);
+    model.questionNumber(0);
 });
 
