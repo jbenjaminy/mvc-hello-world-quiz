@@ -1,55 +1,71 @@
     /*============ MODEL ============*/
 
+    // MODEL Constructor
     var Model = function() {
+        // Linked Variables with View
         this.questionText = "";
         this.answers = [];
         this.questionCurrent = 0;
         this.score = 0;
-
+        // Callback functions 
         this.onChangeQuestionNumber = null;
         this.onAnswerSubmit = null;
     };
 
 
+    // Prototype function that stores the current question object's values in the MODEL's variables
     Model.prototype.questionNumber = function(questionIndex) {
+        // Sets the questions number to the current question
         this.questionCurrent = questionIndex;
+        // Storing actual question text 
         this.questionText = QUESTIONS[questionIndex].text;
+        // Storing the answer values in the answer array
         this.answers = QUESTIONS[questionIndex].answers;
 
+        // Links to setQuestion function in VIEW to update displayed questions/answers
         if (this.onChangeQuestionNumber) {
             this.onChangeQuestionNumber(this);
         }
 
     }
 
+    // Prototype function that checks if submitted answer is correct and updates MODEL's score variable
     Model.prototype.checkAnswer = function(choice) {
+        // Sets current question object to variable question
         var question = QUESTIONS[this.questionCurrent];
-        if (question.answers[question.correct] === choice) {
+        // Adds 1 to MODEL's score var if submitted answer is correct
+        if (question.correct === choice) {
             this.score +=1; 
         }
-        if (this.questionCurrent + 1 < QUESTIONS.length) {
-            this.questionCurrent +=1;
-        }
+        // Updates displayed score in the VIEW
         if (this.onScoreChange) {
             this.onScoreChange(score);
+
         }
+        // Increments questionCurrent if it's not the last question 
+        if (this.questionCurrent + 1 < QUESTIONS.length) {
+            this.questionCurrent +=1;
+        // Last question calls function to show results
+        } else {
+            showResults();
+        }
+       
 
 
     }
 
-    var myModel = new Model();
+    // var myModel = new Model();
 
-    myModel.onChangeQuestionNumber = function(model) {
-        console.log("Question" + (myModel.questionCurrent + 1) + ": " + myModel.questionText);
-        console.log(myModel.answers);
-    };
+    // myModel.onChangeQuestionNumber = function(model) {
+    //     console.log("Question" + (myModel.questionCurrent + 1) + ": " + myModel.questionText);
+    //     console.log(myModel.answers);
+    // };
 
-    myModel.onAnswerSubmit = function(model) {
-        console.log("You've gotten" + myModel.score + "out of 4 correct");
-    };
+    // myModel.onAnswerSubmit = function(model) {
+    //     console.log("You've gotten" + myModel.score + "out of 4 correct");
+    // };
 
-   
-
+    // Stored question/answers data
     var QUESTIONS = [{
             text: '<:48:x<:65:=<:6C:$=$=$$~<:03:+$~<:ffffffffffffffbd:+$<:ffffffffffffffb1:+$<:57:~$~<:18:x+$~<:03:+$~<:06:x-$x<:0e:x-$=x<:43:x-$',
             answers: [
@@ -91,8 +107,9 @@
 
     /*============= VIEW =============*/
 
+    // VIEW Constructor
     var View = function(model) {
-
+        // Current instance of the MODEL passed from the MODEL
         this.model = model;
 
         // Linked variables
@@ -103,12 +120,13 @@
         this.scoreElement = $('.score');
         this.restartButtonElement = $('.restart-button');
         
+        // Callback functions
         this.onChangeQuestionNumber = null;
         this.onAnswerSubmit = null;
 
+        // Click event for submitting answers, calls onAnswerClick function
         this.answersElement.on('click', 'button', function() {
         onAnswerClick();
-         
         });
 
         // Display only variables
@@ -118,7 +136,7 @@
     };
 
 
-    // Linked Functions
+    // Prototype function that displays stored values for current question 
     View.prototype.setQuestion = function(model) {
         // Displays current question number
         this.questionCurrentElement.text(model.questionCurrent);
@@ -126,9 +144,8 @@
         this.questionElement.text(model.questionText);
         // Empties answersElement
         this.answersElement.empty();
-        // click function
-
-        // Iterates through answers for current question
+        
+        // Iterates through answers array for current question
         for (var i = 0; i < model.answers.length; i++) {
             // sets answers to variable
             var answer = model.answers[i];
@@ -137,47 +154,51 @@
         }
     };
 
-    // click function
+    // Prototype function to store the submitted answer 
     View.prototype.onAnswerClick = function() {
-        // takes the index from the answer the user clicked
+        // takes the index from the answer the user clicked and stores in the choice variable
         var choice = $(this).parent().index();
 
+        // Passes the choice to the MODEL's checkAnswer function to determine if correct
         if (this.onAnswerSubmit) {
             this.onAnswerSubmit(choice);
         }
-
-
-        // showResults();
-        
     };
 
+    // Prototype function that updates score display element in the VIEW
     View.prototype.updateScore = function(score) {
+        // Displays current score from the MODEL's score variable
         this.scoreElement.text(score);
 
+        // Callback function that initiates next question with MODEL's questionNumber function
         if (this.onChangeQuestionNumber) {
             this.onChangeQuestionNumber();
         }
 
     };
     
-    // // restarts game and zeros variables
-    // restartButtonElement.click(function() {
-    //     setQuestion(0);
-    //     resetScore();
-    //     showQuestions();
-    // });
+    // Click function that creates new game 
+    restartButtonElement.click(function() {
+        // Initializes a new instance of the model, view, and controller
+        var model = new Model();
+        var view = new View(model);
+        var controller = new Controller(model, view);
 
-    // var resetScore = function() {
-    //     scoreElement.text(0);
-    // };
+        // Calling the MODEL's questionNumber function and passing a questionIndex of 0
+        model.questionNumber(0);
+        // Displays the questions/answers section in the VIEW
+        showQuestions();
+    });
+
+  
 
     // Display Only Functions
-    var showResults = function() {
+    function showResults() {
         questionsPageElement.hide();
         resultsPageElement.show();
     };
 
-    var showQuestions = function() {
+    function showQuestions() {
         resultsPageElement.hide();
         questionsPageElement.show();
     };
@@ -186,21 +207,24 @@
 
     /*============ CONTROLLER ============*/
 
+    // Links the VIEW to the MODEL
     var Controller = function(model, view) {
+        // Upon storing values for current question in the MODEL, calls the setQuestion function in the VIEW to display values
         model.onChangeQuestionNumber = view.setQuestion.bind(view);
-
+        // After user selects their answer, calls the MODEL's checkAnswer function to determine if it's correct and update the stored score variable
         view.onAnswerSubmit = model.checkAnswer.bind(model);
-
+        // When the stored score variable is updated, calls the updateScore function in the VIEW to display the score change (if any)
         model.onScoreChange = view.updateScore.bind(view);
-
+        // After the updated score is displayed, calls the MODEL's questionNumber function to store the values for the following question to start all over again
         view.onChangeQuestionNumber = model.questionNumber.bind(model);
     };
 
+// When the page loads, creates new instances of the model, view, and controller, and initializes the first question
 document.addEventListener('DOMContentLoaded', function() {
     var model = new Model();
     var view = new View(model);
     var controller = new Controller(model, view);
 
+    // Calls the MODEL's questionNumber function for the first question/answers
     model.questionNumber(0);
 });
-
