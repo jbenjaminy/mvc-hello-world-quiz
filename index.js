@@ -163,17 +163,16 @@ View.prototype.setQuestion = function(model) {
         // sets answers to variable
         var answer = model.answers[i];
         // prints to answers element
-        this.answersElement.append('<li><button type="button">' + answer + '</button></li>');
+        this.answersElement.append('<li><button type="button" id="' + i + '">' + answer + '</button></li>');
     }
 };
 
 // Prototype function to store the submitted answer 
-View.prototype.onAnswerClick = function(some_arg) {
+View.prototype.onAnswerClick = function(buttonId) {
     // takes the index from the answer the user clicked and stores in the choice variable
     
-    var choice = $(this).parent().index();
-    console.log(some_arg);
-
+    var choice = parseInt(buttonId.target.id);
+    console.log(choice);
 
     // Passes the choice to the MODEL's checkAnswer function to determine if correct
     if (this.onAnswerSubmit) {
