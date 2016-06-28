@@ -17,68 +17,8 @@ var Model = function() {
     this.answers = [];
     this.questionCurrent = 0;
     this.score = 0;
-    // this.questions
-    // Callback functions 
-    this.onChangeQuestionNumber = null;
-    this.onAnswerSubmit = null;
-    this.onGameEnd = null;
-};
-
-
-// Prototype function that stores the current question object's values in the MODEL's variables
-Model.prototype.questionNumber = function() {
-    // Storing actual question text 
-    this.questionText = QUESTIONS[this.questionCurrent].text;
-    // Storing the answer values in the answer array
-    this.answers = QUESTIONS[this.questionCurrent].answers;
-
-    // Links to setQuestion function in VIEW to update displayed questions/answers
-    if (this.onChangeQuestionNumber) {
-        this.onChangeQuestionNumber(this);
-    }
-}
-
-// Prototype function that checks if submitted answer is correct and updates MODEL's score variable
-Model.prototype.checkAnswer = function(choice) {
-    // Sets current question object to variable question
-    var question = QUESTIONS[this.questionCurrent];
-    // Adds 1 to MODEL's score var if submitted answer is correct
-    if (question.correct === choice) {
-        this.score +=1; 
-    }
-    // console.log(question.correct);
-    // console.log(choice);
-    // Updates displayed score in the VIEW
-    if (this.onScoreChange) {
-        this.onScoreChange(this.score);
-    }
-    // Increments questionCurrent if it's not the last question 
-    if (this.questionCurrent + 1 < QUESTIONS.length) {
-        this.questionCurrent +=1;
-    // Last question calls function to show results
-    } else {
-        if (this.onGameEnd) {
-            this.onGameEnd(this);
-        }
-    }
-}
-
-// USED TO TEST MODEL IN CONSOLE
-// var myModel = new Model();
-
-// myModel.onChangeQuestionNumber = function(model) {
-//     console.log("Question" + (myModel.questionCurrent + 1) + ": " + myModel.questionText);
-//     console.log(myModel.answers);
-// };
-
-// MUST SWITCH question.correct to question.answers[question.correct] IN CHECK ANSWER FOR THIS TO WORK
-// myModel.onAnswerSubmit = function(model) {
-//     console.log("You've gotten" + myModel.score + "out of 4 correct");
-// };
-
-// Stored question/answers data
-// PASS IN TO EACH INSTANCE OF THE MODEL
-var QUESTIONS = [{
+    this.questions = 
+    [{
         text: '<:48:x<:65:=<:6C:$=$=$$~<:03:+$~<:ffffffffffffffbd:+$<:ffffffffffffffb1:+$<:57:~$~<:18:x+$~<:03:+$~<:06:x-$x<:0e:x-$=x<:43:x-$',
         answers: [
             '0815',
@@ -116,6 +56,69 @@ var QUESTIONS = [{
         ],
         correct: 3
     }];
+    this.totalQuestions = this.questions.length
+
+    // Callback functions 
+    this.onChangeQuestionNumber = null;
+    this.onAnswerSubmit = null;
+    this.onGameEnd = null;
+};
+
+
+// Prototype function that stores the current question object's values in the MODEL's variables
+Model.prototype.questionNumber = function() {
+    console.log(this.questionCurrent);
+    // Storing actual question text 
+    this.questionText = this.questions[this.questionCurrent].text;
+    // Storing the answer values in the answer array
+    this.answers = this.questions[this.questionCurrent].answers;
+
+    // Links to setQuestion function in VIEW to update displayed questions/answers
+    if (this.onChangeQuestionNumber) {
+        this.onChangeQuestionNumber(this);
+    }
+}
+
+// Prototype function that checks if submitted answer is correct and updates MODEL's score variable
+Model.prototype.checkAnswer = function(choice) {
+    // Sets current question object to variable question
+    var question = this.questions[this.questionCurrent];
+    // Adds 1 to MODEL's score var if submitted answer is correct
+    if (question.correct === choice) {
+        this.score +=1; 
+    }
+    // Increments questionCurrent if it's not the last question 
+    if (this.questionCurrent + 1 < this.questions.length) {
+        this.questionCurrent +=1;
+    // Last question calls function to show results
+    } else {
+        if (this.onGameEnd) {
+            this.onGameEnd(this);
+        }
+    }
+    // Updates displayed score in the VIEW
+    if (this.onScoreChange) {
+        this.onScoreChange(this.score);
+    }
+    
+}
+
+// USED TO TEST MODEL IN CONSOLE
+// var myModel = new Model();
+
+// myModel.onChangeQuestionNumber = function(model) {
+//     console.log("Question" + (myModel.questionCurrent + 1) + ": " + myModel.questionText);
+//     console.log(myModel.answers);
+// };
+
+// MUST SWITCH question.correct to question.answers[question.correct] IN CHECK ANSWER FOR THIS TO WORK
+// myModel.onAnswerSubmit = function(model) {
+//     console.log("You've gotten" + myModel.score + "out of 4 correct");
+// };
+
+// Stored question/answers data
+// PASS IN TO EACH INSTANCE OF THE MODEL
+
 
 /*============= VIEW =============*/
 
@@ -140,9 +143,7 @@ var View = function(model) {
     this.answersElement.click(this.onAnswerClick.bind(this));
 
     // Click function that creates new game 
-    this.restartButtonElement.click(function() {
-        restartGame();
-    });
+    this.restartButtonElement.click(this.restartGame.bind(this));
 
     // Display only variables
     this.questionsPageElement = $('.questions-page');
@@ -153,6 +154,8 @@ var View = function(model) {
 View.prototype.setQuestion = function(model) {
     // Displays current question number
     this.questionCurrentElement.text(model.questionCurrent + 1);
+    // Displays total number of questions
+    this.questionsTotalElement.text(model.totalQuestions);
     // Displays current question text
     this.questionElement.text(model.questionText);
     // Empties answersElement
@@ -172,7 +175,6 @@ View.prototype.onAnswerClick = function(buttonId) {
     // takes the index from the answer the user clicked and stores in the choice variable
     
     var choice = parseInt(buttonId.target.id);
-    console.log(choice);
 
     // Passes the choice to the MODEL's checkAnswer function to determine if correct
     if (this.onAnswerSubmit) {
@@ -199,21 +201,19 @@ View.prototype.showResults = function(model) {
 
 };
 
-function showQuestions() {
-    resultsPageElement.hide();
-    questionsPageElement.show();
-};
 // Function that creates a new game
-function restartGame() {
+View.prototype.restartGame = function() {
     // Initializes a new instance of the model, view, and controller
     var model = new Model();
     var view = new View(model);
     var controller = new Controller(model, view);
 
+    // Displays the questions/answers section in the VIEW
+    this.resultsPageElement.hide();
+    this.questionsPageElement.show();
+
     // Calling the MODEL's questionNumber function
     model.questionNumber();
-    // Displays the questions/answers section in the VIEW
-    showQuestions();
 };
 
 
@@ -230,7 +230,7 @@ var Controller = function(model, view) {
     model.onScoreChange = view.updateScore.bind(view);
     // After the updated score is displayed, calls the MODEL's questionNumber function to store the values for the following question to start all over again
     view.onChangeQuestionNumber = model.questionNumber.bind(model);
-
+    // After last question, calls the MODEL's showResults function to display the number of correct answers
     model.onGameEnd = view.showResults.bind(view);
 };
 
